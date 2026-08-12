@@ -1,0 +1,47 @@
+name: Deploy to Cloud Run
+
+on:
+  push:
+    branches: [main]
+
+env:
+  SERVICE_NAME: wi-tp-web
+  REGION: europe-west1
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write # required so the job can mint the OIDC token WIF exchanges
+    steps:
+      - uses: actions/checkout@v4
+
+      # Next.js inlines NEXT_PUBLIC_* vars into the client bundle at build
+      # time, not runtime — deploy-cloudrun's `env_vars` below only sets
+      # the *running container's* env, which is too late for this one. So
+      # it's written into the source tree before the buildpack build runs
+      # (`.env.production.local` outranks the committed `.env`, and NODE_ENV
+      # is already "production" by the time `npm run build` executes), the
+      # same way the backend keeps secrets out of git but as a build-time
+      # rather than runtime value.
+      - name: Write production API URL for the build
+        run: echo "NEXT_PUBLIC_API_URL=${{ secrets.NEXT_PUBLIC_API_URL }}" >> .env.production.local
+
+      # Workload Identity Federation: no key file ever touches the runner.
+      # This repo's WIF_PROVIDER/WIF_SERVICE_ACCOUNT secrets need to be set
+      # up the same way as the backend's — see the setup commands there —
+      # since GitHub secrets don't cross repositories.
+      - uses: google-github-actions/auth@v2
+        with:
+          workload_identity_provider: ${{ secrets.WIF_PROVIDER }}
+          service_account: ${{ secrets.WIF_SERVICE_ACCOUNT }}
+
+      - uses: google-github-actions/setup-gcloud@v2
+
+      - name: Deploy to Cloud Run
+        uses: google-github-actions/deploy-cloudrun@v2
+        with:
+          service: ${{ env.SERVICE_NAME }}
+          region: ${{ env.REGION }}
+          source: .

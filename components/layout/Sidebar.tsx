@@ -7,7 +7,7 @@ import { getEventStats } from "@/lib/api";
 import { useAuth } from "@/lib/auth";
 
 const NAV_ITEMS = [
-  { href: "/", label: "Pipeline" },
+  { href: "/dashboard", label: "Pipeline" },
   { href: "/stats", label: "Stats" },
   { href: "/repositories", label: "Repositories" },
   { href: "/deliveries", label: "Deliveries" },
@@ -29,10 +29,10 @@ export function Sidebar() {
 
   return (
     <aside className="flex h-full w-60 shrink-0 flex-col border-r border-border bg-surface-1 px-4 py-5">
-      <div className="mb-6 flex items-center gap-2 px-1">
+      <Link href="/" className="mb-6 flex items-center gap-2 px-1">
         <span className="h-2.5 w-2.5 rounded-sm bg-push" aria-hidden="true" />
         <span className="font-display text-sm font-medium text-text-primary">WI-TP</span>
-      </div>
+      </Link>
 
       <nav className="flex flex-col gap-0.5">
         {NAV_ITEMS.map((item) => {

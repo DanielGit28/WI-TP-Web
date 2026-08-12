@@ -4,10 +4,10 @@ import { useMemo, useRef, useState } from "react";
 import { Canvas, useFrame } from "@react-three/fiber";
 import { Html } from "@react-three/drei";
 import { Bloom, EffectComposer } from "@react-three/postprocessing";
-import { buildPipelineCurve, STAGES } from "./curve";
+import { buildPipelineCurve, STAGES, type StageId } from "./curve";
 import { EventParticle } from "./EventParticle";
 import { PipelineTube } from "./PipelineTube";
-import { PipelineStage } from "./PipelineStage";
+import { PipelineStage, type StagePulseData } from "./PipelineStage";
 
 export interface PipelineParticle {
   id: string;
@@ -20,11 +20,21 @@ interface PipelineCanvasProps {
   reducedMotion: boolean;
 }
 
+interface StagePulse extends StagePulseData {
+  stageId: StageId;
+}
+
 const HEX_CHARS = "0123456789abcdef";
 function randomHex(length: number) {
   let out = "";
   for (let i = 0; i < length; i++) out += HEX_CHARS[Math.floor(Math.random() * 16)];
   return out;
+}
+
+// Module-scope so the impure Date.now()/Math.random() calls aren't
+// textually inside the component body (same reasoning as randomHex above).
+function randomPulseKey(stageId: StageId): string {
+  return `${stageId}-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`;
 }
 
 /** Very slow autonomous drift so the scene never feels perfectly static —
@@ -47,12 +57,34 @@ export default function PipelineCanvas({
 }: PipelineCanvasProps) {
   const curve = useMemo(() => buildPipelineCurve(), []);
   const [guardFlash, setGuardFlash] = useState<string | null>(null);
+  const [stagePulses, setStagePulses] = useState<StagePulse[]>([]);
   const flashTimeout = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   function triggerGuardFlash() {
     setGuardFlash(randomHex(12));
     if (flashTimeout.current) clearTimeout(flashTimeout.current);
     flashTimeout.current = setTimeout(() => setGuardFlash(null), 420);
+  }
+
+  // Colored ring pulse at whichever stage a particle just crossed — the
+  // WebGL analog of the mockup's `ringpulse` keyframes. Guard additionally
+  // keeps its own sha256 label, a real functional detail worth preserving.
+  function pushStagePulse(stageId: StageId, color: string) {
+    const key = randomPulseKey(stageId);
+    setStagePulses((prev) => [...prev, { key, stageId, color }]);
+    setTimeout(() => {
+      setStagePulses((prev) => prev.filter((p) => p.key !== key));
+    }, 600);
+  }
+
+  function handleCrossStage(stageId: StageId, color: string) {
+    pushStagePulse(stageId, color);
+    if (stageId === "guard") triggerGuardFlash();
+  }
+
+  function pulseForStage(stageId: StageId): StagePulse | undefined {
+    const matches = stagePulses.filter((p) => p.stageId === stageId);
+    return matches[matches.length - 1];
   }
 
   const guardStage = STAGES.find((s) => s.id === "guard")!;
@@ -72,7 +104,7 @@ export default function PipelineCanvas({
       <PipelineTube curve={curve} />
 
       {STAGES.map((stage) => (
-        <PipelineStage key={stage.id} stage={stage} />
+        <PipelineStage key={stage.id} stage={stage} pulse={pulseForStage(stage.id)} />
       ))}
 
       {particles.map((p) => (
@@ -80,8 +112,11 @@ export default function PipelineCanvas({
           key={p.id}
           curve={curve}
           color={p.color}
-          onCrossGuard={triggerGuardFlash}
-          onComplete={() => onParticleComplete(p.id)}
+          onCrossStage={handleCrossStage}
+          onComplete={() => {
+            pushStagePulse("postgres", p.color);
+            onParticleComplete(p.id);
+          }}
         />
       ))}
 
@@ -99,4 +134,3 @@ export default function PipelineCanvas({
     </Canvas>
   );
 }
-

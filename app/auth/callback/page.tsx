@@ -11,13 +11,15 @@ export default function AuthCallbackPage() {
   useEffect(() => {
     const token = storeTokenFromFragment();
     if (!token) {
-      setFailed(true);
+      // Deferred a tick rather than set synchronously in the effect body —
+      // avoids the extra cascading render the direct call would trigger.
+      queueMicrotask(() => setFailed(true));
       return;
     }
     // Full reload rather than router.push so AuthProvider's mount-time
     // localStorage read picks the token up immediately, instead of the
     // provider having already initialized with no token in this tab.
-    window.location.href = "/";
+    window.location.href = "/dashboard";
   }, [router]);
 
   return (
@@ -28,7 +30,7 @@ export default function AuthCallbackPage() {
           <p className="max-w-sm text-sm text-text-muted">
             No token came back from GitHub. Try signing in again.
           </p>
-          <a href="/" className="mt-2 text-sm text-push underline underline-offset-4">
+          <a href="/dashboard" className="mt-2 text-sm text-push underline underline-offset-4">
             Back to the console
           </a>
         </>

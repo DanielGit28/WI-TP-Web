@@ -34,10 +34,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     const stored = window.localStorage.getItem(TOKEN_KEY);
     if (!stored) {
-      setIsLoading(false);
+      // Deferred a tick rather than set synchronously in the effect body —
+      // avoids the extra cascading render the direct call would trigger.
+      queueMicrotask(() => setIsLoading(false));
       return;
     }
-    setToken(stored);
+    // Deferred a tick rather than set synchronously in the effect body —
+    // avoids the extra cascading render the direct call would trigger.
+    queueMicrotask(() => setToken(stored));
 
     getCurrentUser(stored)
       .then(setUser)

@@ -30,12 +30,15 @@ export function EventTypeRadial() {
   );
   const total = rows.reduce((sum, r) => sum + r.count, 0);
 
-  let cumulative = 0;
-  const segments = rows.map((row) => {
-    const fraction = total > 0 ? row.count / total : 0;
+  const fractions = rows.map((row) => (total > 0 ? row.count / total : 0));
+  const segments = rows.map((row, i) => {
+    // tsconfig's noUncheckedIndexedAccess makes this `number | undefined`
+    // even though `i` is always in range here — fractions is derived from
+    // the same `rows` array being mapped over.
+    const fraction = fractions[i] ?? 0;
     const dash = fraction * CIRCUMFERENCE;
-    const offset = -cumulative * CIRCUMFERENCE;
-    cumulative += fraction;
+    const priorSum = fractions.slice(0, i).reduce((sum, f) => sum + f, 0);
+    const offset = -priorSum * CIRCUMFERENCE;
     return { ...row, dash, offset, color: colorForEventType(row.eventType) };
   });
 

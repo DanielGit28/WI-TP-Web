@@ -53,6 +53,7 @@ export const STAGES: Stage[] = [
 ];
 
 export const GUARD_T = STAGES.find((s) => s.id === "guard")!.t;
+export const TRANSFORM_T = STAGES.find((s) => s.id === "transform")!.t;
 
 export function buildPipelineCurve(): THREE.CatmullRomCurve3 {
   return new THREE.CatmullRomCurve3(
