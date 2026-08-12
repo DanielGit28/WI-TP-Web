@@ -14,7 +14,9 @@ function usePrefersReducedMotion() {
   const [reduced, setReduced] = useState(false);
   useEffect(() => {
     const mq = window.matchMedia("(prefers-reduced-motion: reduce)");
-    setReduced(mq.matches);
+    // Deferred a tick rather than set synchronously in the effect body —
+    // avoids the extra cascading render the direct call would trigger.
+    queueMicrotask(() => setReduced(mq.matches));
     const listener = (e: MediaQueryListEvent) => setReduced(e.matches);
     mq.addEventListener("change", listener);
     return () => mq.removeEventListener("change", listener);
