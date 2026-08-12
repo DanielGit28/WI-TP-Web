@@ -1,0 +1,77 @@
+@import "tailwindcss";
+
+/*
+ * Design tokens — lifted directly from the approved Claude Design mockup
+ * (WI-TP_Console). Keep these in sync with lib/event-colors.ts, which
+ * needs the same hex values as plain JS (Tailwind classes can't be
+ * built from a runtime eventType string, and three.js/WebGL can't read
+ * CSS custom properties at all).
+ */
+@theme {
+  /* graduated dark surface scale — never a single flat black */
+  --color-surface-0: #07080a; /* page */
+  --color-surface-1: #0b0d10; /* card */
+  --color-surface-2: #101319; /* raised card / panel */
+  --color-surface-3: #16191e; /* hover / popover */
+  --color-surface-4: #1b2029; /* highest */
+
+  --color-border: #232a34;
+  --color-border-strong: #3a4250;
+
+  --color-text-primary: #e6e8ec;
+  --color-text-secondary: #c3c9d4;
+  --color-text-muted: #8b93a1;
+  --color-text-faint: #5b636e;
+
+  /* event-type legend — identical across the pipeline, the feed, and stats */
+  --color-push: #4f8bff;
+  --color-pull-request: #a371f7;
+  --color-issues: #f2913d;
+  --color-star: #ffd93d;
+  --color-release: #35d07f;
+  --color-fork: #ff6ec7;
+  --color-create: #2fd4d4;
+  --color-delete: #8b93a1;
+
+  --color-danger: #ff6a5e;
+  --color-danger-bg: #2a1c1e;
+  --color-success: #35d07f;
+  --color-success-bg: #1b3a2a;
+}
+
+/*
+ * `inline` because these values only exist once next/font's className is
+ * applied to <html> (see app/layout.tsx) — Tailwind must resolve them at
+ * usage time, not try to precompute them at CSS-build time.
+ */
+@theme inline {
+  --font-display: var(--font-space-grotesk);
+  --font-sans: var(--font-ibm-plex-sans);
+  --font-mono: var(--font-ibm-plex-mono);
+}
+
+html {
+  color-scheme: dark;
+}
+
+body {
+  background: var(--color-surface-0);
+  color: var(--color-text-primary);
+  font-family: var(--font-sans);
+}
+
+::selection {
+  background: var(--color-push);
+  color: var(--color-surface-0);
+}
+
+/* respect reduced-motion globally; components also check this in JS
+   before starting anything on a requestAnimationFrame loop */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+    scroll-behavior: auto !important;
+  }
+}
