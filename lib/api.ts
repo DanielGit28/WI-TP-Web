@@ -15,7 +15,7 @@ if (!API_URL && typeof window !== "undefined") {
   // relative paths that happen to 404 — NEXT_PUBLIC_API_URL is required,
   // there's no same-origin fallback since the API is a separate Cloud Run
   // service, not a route inside this Next.js app.
-  // eslint-disable-next-line no-console
+   
   console.error(
     "NEXT_PUBLIC_API_URL is not set — API calls will fail. Add it to .env.local.",
   );
@@ -53,7 +53,14 @@ async function request<T>(path: string, options: RequestOptions = {}): Promise<T
     }
   }
 
-  const headers: Record<string, string> = {};
+  const headers: Record<string, string> = {
+    // Harmless against any non-ngrok backend — but when NEXT_PUBLIC_API_URL
+    // points at an ngrok-free.dev tunnel, ngrok otherwise intercepts every
+    // request with an HTML "you're about to visit..." interstitial that
+    // carries no CORS headers, which the browser then reports as a CORS
+    // failure even though the request never reached the real backend.
+    "ngrok-skip-browser-warning": "true",
+  };
   if (body !== undefined) headers["Content-Type"] = "application/json";
   if (token) headers.Authorization = `Bearer ${token}`;
 

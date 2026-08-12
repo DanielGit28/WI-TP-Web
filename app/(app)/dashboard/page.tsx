@@ -22,9 +22,7 @@ export default function DashboardPage() {
         <p className="font-mono text-xs uppercase tracking-wide text-text-faint">
           wi-tp-web · UI console
         </p>
-        <h1 className="mt-1 font-display text-2xl font-semibold text-text-primary">
-          Every webhook, verified and normalized.
-        </h1>
+        <h1 className="mt-1 font-display text-2xl font-semibold text-text-primary">Pipeline</h1>
         <p className="mt-1 max-w-2xl text-sm text-text-muted">
           Screens built against the live API surface:{" "}
           <code className="font-mono text-text-secondary">GET /events</code>,{" "}
