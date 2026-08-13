@@ -6,6 +6,8 @@ import { useQuery } from "@tanstack/react-query";
 import { findEventById } from "@/lib/api";
 import { useAuth } from "@/lib/auth";
 import { colorForEventType, labelForEventType } from "@/lib/event-colors";
+import { parseApiDate, timeAgo } from "@/lib/format";
+import { extractPayloadDetails } from "@/lib/payload-details";
 
 export default function DeliveryDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params);
@@ -15,6 +17,8 @@ export default function DeliveryDetailPage({ params }: { params: Promise<{ id: s
     queryKey: ["events", "detail", id, token ?? null],
     queryFn: () => findEventById(id, token ?? undefined),
   });
+
+  const details = query.data ? extractPayloadDetails(query.data.eventType, query.data.rawPayload) : [];
 
   return (
     <div className="mx-auto max-w-3xl px-6 py-8">
@@ -47,6 +51,9 @@ export default function DeliveryDetailPage({ params }: { params: Promise<{ id: s
               {query.data.action && (
                 <span className="text-xs text-text-faint">{query.data.action}</span>
               )}
+              <span className="text-xs text-text-faint">
+                · {timeAgo(query.data.receivedAt)} ago
+              </span>
             </div>
             <h1 className="mt-2 font-display text-xl font-medium text-text-primary">
               {query.data.summary ?? "Event received"}
@@ -56,6 +63,35 @@ export default function DeliveryDetailPage({ params }: { params: Promise<{ id: s
               {query.data.senderLogin ? ` · @${query.data.senderLogin}` : ""}
             </p>
           </div>
+
+          {details.length > 0 && (
+            <div className="rounded-lg border border-border bg-surface-1 p-4">
+              <p className="mb-3 font-mono text-[11px] uppercase tracking-wide text-text-faint">
+                What happened
+              </p>
+              <dl className="grid grid-cols-1 gap-x-6 gap-y-3 text-sm sm:grid-cols-2">
+                {details.map((d) => (
+                  <div key={d.label} className="min-w-0">
+                    <dt className="font-mono text-[11px] text-text-faint">{d.label}</dt>
+                    <dd className="mt-0.5 truncate text-text-secondary">
+                      {d.href ? (
+                        <a
+                          href={d.href}
+                          target="_blank"
+                          rel="noreferrer"
+                          className="text-push hover:underline"
+                        >
+                          {d.value}
+                        </a>
+                      ) : (
+                        d.value
+                      )}
+                    </dd>
+                  </div>
+                ))}
+              </dl>
+            </div>
+          )}
 
           <dl className="grid grid-cols-2 gap-x-6 gap-y-3 rounded-lg border border-border bg-surface-1 p-4 text-xs sm:grid-cols-4">
             <div>
@@ -77,19 +113,20 @@ export default function DeliveryDetailPage({ params }: { params: Promise<{ id: s
             <div>
               <dt className="text-text-faint">received_at</dt>
               <dd className="mt-0.5 font-mono text-text-secondary">
-                {new Date(query.data.receivedAt).toISOString()}
+                {parseApiDate(query.data.receivedAt).toISOString()}
               </dd>
             </div>
           </dl>
 
-          <div>
-            <p className="mb-1.5 font-mono text-xs uppercase tracking-wide text-text-faint">
+          <details className="group rounded-lg border border-border bg-surface-1 open:pb-4">
+            <summary className="cursor-pointer select-none list-none px-4 py-3 font-mono text-xs uppercase tracking-wide text-text-faint hover:text-text-secondary">
+              <span className="inline-block transition-transform group-open:rotate-90">›</span>{" "}
               raw_payload
-            </p>
-            <pre className="max-h-[480px] overflow-auto rounded-lg border border-border bg-surface-2 p-4 font-mono text-xs leading-relaxed text-text-secondary">
+            </summary>
+            <pre className="mx-4 max-h-[480px] overflow-auto rounded-lg border border-border bg-surface-2 p-4 font-mono text-xs leading-relaxed text-text-secondary">
               {JSON.stringify(query.data.rawPayload, null, 2)}
             </pre>
-          </div>
+          </details>
         </div>
       )}
     </div>

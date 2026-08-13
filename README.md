@@ -26,7 +26,7 @@ Opens on `http://localhost:3000`. Sign-in redirects to the backend's `/auth/gith
 
 Auth: token lands in the URL fragment from the backend redirect, gets captured by `/auth/callback`, stored in `localStorage`, sent as `Authorization: Bearer` on every authenticated call — no cookie handling needed since the backend never expected any.
 
-"Live" is a 4s poll (`refetchInterval` via TanStack Query), not a websocket — the backend doesn't expose one yet. New rows in each poll spawn a particle that travels the pipeline curve; existing rows on first load don't (otherwise loading the page with 900 historical events fires 900 particles at once).
+"Live" is an 8s poll (`refetchInterval` via TanStack Query), not a websocket — the backend doesn't expose one yet. New rows in each poll spawn a particle that travels the pipeline curve; existing rows on first load don't (otherwise loading the page with 900 historical events fires 900 particles at once). Stats/events queries share query keys across components (sidebar health check, feed, pipeline, radial chart) so TanStack Query dedupes concurrent pollers into one request instead of firing one per component. The anonymous marketing page fetches once (`poll: false`) rather than polling, since it's decorative rather than a console someone's actively watching.
 
 ## Known simplifications vs. the mockup
 

@@ -5,7 +5,7 @@ import { getEvents } from "@/lib/api";
 import { useAuth } from "@/lib/auth";
 import { EventCard } from "./EventCard";
 
-const POLL_MS = 4000;
+const POLL_MS = 8000;
 
 export function EventFeed({ limit = 30 }: { limit?: number }) {
   const { token } = useAuth();

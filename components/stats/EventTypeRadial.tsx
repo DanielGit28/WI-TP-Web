@@ -15,7 +15,7 @@ export function EventTypeRadial() {
   const query = useQuery({
     queryKey: ["events", "stats", token ?? null],
     queryFn: () => getEventStats(token ?? undefined),
-    refetchInterval: 4000,
+    refetchInterval: 8000,
   });
 
   if (query.isLoading) {

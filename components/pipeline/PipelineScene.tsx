@@ -26,7 +26,7 @@ export function PipelineScene() {
   } = usePipelineParticles();
 
   return (
-    <div className="overflow-hidden rounded-lg border border-border bg-surface-1">
+    <div className="relative z-0 isolate overflow-hidden rounded-lg border border-border bg-surface-1">
       <div className="flex flex-wrap items-center justify-between gap-3 border-b border-border px-4 py-3">
         <div>
           <h2 className="font-display text-sm font-medium text-text-primary">Pipeline</h2>
@@ -41,16 +41,23 @@ export function PipelineScene() {
             }`}
             aria-hidden="true"
           />
-          {isError ? "polling paused" : `live · ${pollSeconds}s poll`}
+          {isError ? "polling paused" : pollSeconds ? `live · ${pollSeconds}s poll` : "recent activity"}
         </div>
       </div>
 
-      <div className="h-[320px] w-full sm:h-[380px]">
-        <PipelineCanvas
-          particles={particles}
-          onParticleComplete={handleParticleComplete}
-          reducedMotion={reducedMotion}
-        />
+      {/* The 3D scene spans a fixed 12 world-unit width — below roughly a
+          2:1 aspect ratio the end stages (GitHub/Postgres) get clipped by
+          the camera's horizontal FOV. Rather than fight that with dynamic
+          camera math, give the canvas a floor width and let narrow
+          viewports scroll horizontally instead of squishing/cutting it. */}
+      <div className="h-[320px] w-full overflow-x-auto sm:h-[380px]">
+        <div className="h-full min-w-180 sm:min-w-215">
+          <PipelineCanvas
+            particles={particles}
+            onParticleComplete={handleParticleComplete}
+            reducedMotion={reducedMotion}
+          />
+        </div>
       </div>
 
       {totalIngested !== null && (
