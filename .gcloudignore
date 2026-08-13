@@ -1,0 +1,10 @@
+# Without this file, `gcloud run deploy --source .` auto-derives its
+# upload-ignore list from .gitignore — which excludes .env*.local. That
+# silently drops .env.production.local (written by deploy.yml specifically
+# so `next build` can read NEXT_PUBLIC_API_URL) from the source Cloud Build
+# receives, so the build falls through to whatever's in the committed .env
+# instead. This explicit list does NOT exclude .env* files for that reason.
+.git
+.github
+node_modules
+.next
