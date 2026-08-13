@@ -1,25 +1,32 @@
 import type { Metadata } from "next";
-import { IBM_Plex_Mono, IBM_Plex_Sans, Space_Grotesk } from "next/font/google";
+import localFont from "next/font/local";
 import { Providers } from "@/components/layout/Providers";
 import "./globals.css";
 
-const spaceGrotesk = Space_Grotesk({
-  subsets: ["latin"],
-  weight: ["500", "600", "700"],
+// Self-hosted rather than next/font/google: that fetches from
+// fonts.gstatic.com at *build* time, which made the Cloud Build step
+// flaky/fail outright when that network call didn't go through. These are
+// the same files Google Fonts serves (latin subset, Apache/OFL-licensed),
+// just vendored so the build has zero external dependency.
+const spaceGrotesk = localFont({
+  src: "./fonts/space-grotesk-variable.woff2",
+  weight: "500 700",
   variable: "--font-space-grotesk",
   display: "swap",
 });
 
-const ibmPlexSans = IBM_Plex_Sans({
-  subsets: ["latin"],
-  weight: ["400", "500", "600"],
+const ibmPlexSans = localFont({
+  src: "./fonts/ibm-plex-sans-variable.woff2",
+  weight: "400 600",
   variable: "--font-ibm-plex-sans",
   display: "swap",
 });
 
-const ibmPlexMono = IBM_Plex_Mono({
-  subsets: ["latin"],
-  weight: ["400", "500"],
+const ibmPlexMono = localFont({
+  src: [
+    { path: "./fonts/ibm-plex-mono-400.woff2", weight: "400", style: "normal" },
+    { path: "./fonts/ibm-plex-mono-500.woff2", weight: "500", style: "normal" },
+  ],
   variable: "--font-ibm-plex-mono",
   display: "swap",
 });
