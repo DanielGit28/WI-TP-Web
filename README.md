@@ -8,6 +8,7 @@ Frontend for the [Webhook Ingestion & Transformation Pipeline](https://github.co
 npm install
 cp .env.local.example .env.local   # fill in NEXT_PUBLIC_API_URL with your Cloud Run URL
 npm run dev
+npm run test (future)
 ```
 
 Opens on `http://localhost:3000`. Sign-in redirects to the backend's `/auth/github`, which redirects back to `/auth/callback#token=...` — that only works if the backend's `FRONTEND_URL` env var points at this app's origin (`http://localhost:3000` locally, your Vercel URL once deployed), since that's what the OAuth callback uses to build the redirect and what CORS is scoped to.
