@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef } from "react";
+import { useEffect, useRef } from "react";
 import { useFrame } from "@react-three/fiber";
 import { Trail } from "@react-three/drei";
 import * as THREE from "three";
@@ -12,15 +12,32 @@ const DURATION_MS = 2600;
 // end, so particles grow/fade in and out instead of popping — matches
 // the mockup's own `trip` keyframes (opacity/rx ramp over ~6-8%).
 const EASE_FRACTION = 0.08;
+// A replayed recent event stays visually subordinate to a genuinely live
+// one — dimmer ceiling opacity, smaller, thinner trail — so "this just
+// happened" always reads as the more important thing on screen, even
+// though both are colored by real event data.
+const REPLAY_OPACITY_CEILING = 0.7;
 
 export interface EventParticleProps {
   curve: CatmullRomCurve3;
   color: string;
+  /** A replay of a recent real event, not a genuinely new arrival right
+   * now — travels the same path but stays visually subdued and never
+   * triggers stage pulses or the spawn toast. */
+  replay?: boolean;
+  onSpawn?: () => void;
   onCrossStage: (stageId: StageId, color: string) => void;
   onComplete: () => void;
 }
 
-export function EventParticle({ curve, color, onCrossStage, onComplete }: EventParticleProps) {
+export function EventParticle({
+  curve,
+  color,
+  replay = false,
+  onSpawn,
+  onCrossStage,
+  onComplete,
+}: EventParticleProps) {
   const meshRef = useRef<Mesh>(null);
   const materialRef = useRef<MeshStandardMaterial>(null);
   const startRef = useRef<number | null>(null);
@@ -28,6 +45,13 @@ export function EventParticle({ curve, color, onCrossStage, onComplete }: EventP
   const transformFiredRef = useRef(false);
   const doneRef = useRef(false);
   const point = useRef(new THREE.Vector3());
+
+  // Fires once, when this particle is actually placed in the scene — same
+  // timing as "a new delivery started at GitHub."
+  useEffect(() => {
+    onSpawn?.();
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- intentionally once-per-mount, not re-run if onSpawn's identity changes
+  }, []);
 
   useFrame((state) => {
     if (doneRef.current) return;
@@ -41,8 +65,9 @@ export function EventParticle({ curve, color, onCrossStage, onComplete }: EventP
 
     const edge = Math.min(progress, 1 - progress);
     const fade = Math.min(1, edge / EASE_FRACTION);
-    meshRef.current?.scale.setScalar(0.6 + 0.4 * fade);
-    if (materialRef.current) materialRef.current.opacity = fade;
+    const opacityCeiling = replay ? REPLAY_OPACITY_CEILING : 1;
+    meshRef.current?.scale.setScalar((replay ? 0.55 : 0.65) + 0.4 * fade);
+    if (materialRef.current) materialRef.current.opacity = fade * opacityCeiling;
 
     if (!guardFiredRef.current && progress >= GUARD_T) {
       guardFiredRef.current = true;
@@ -60,14 +85,14 @@ export function EventParticle({ curve, color, onCrossStage, onComplete }: EventP
   });
 
   return (
-    <Trail width={2.5} length={5} color={color} decay={1} local={false}>
+    <Trail width={replay ? 2.4 : 3.8} length={replay ? 3.5 : 5.5} color={color} decay={1} local={false}>
       <mesh ref={meshRef}>
-        <sphereGeometry args={[0.1, 16, 16]} />
+        <sphereGeometry args={[replay ? 0.13 : 0.18, 16, 16]} />
         <meshStandardMaterial
           ref={materialRef}
           color={color}
           emissive={color}
-          emissiveIntensity={2.2}
+          emissiveIntensity={replay ? 1.6 : 2.8}
           toneMapped={false}
           transparent
           opacity={0}

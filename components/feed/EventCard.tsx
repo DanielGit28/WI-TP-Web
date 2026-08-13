@@ -5,7 +5,7 @@ import { timeAgo } from "@/lib/format";
 
 export function EventCard({ event }: { event: WebhookEvent }) {
   const color = colorForEventType(event.eventType);
-
+  console.log('event: ', event, event.receivedAt);
   return (
     <Link
       href={`/deliveries/${event.id}`}
